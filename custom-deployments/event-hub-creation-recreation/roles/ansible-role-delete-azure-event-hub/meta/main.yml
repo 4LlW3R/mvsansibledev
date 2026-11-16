@@ -1,0 +1,7 @@
+galaxy_info:
+  description: Delete group of resources. By default used to delete Azure Event Hubs.
+
+dependencies:
+  - src: ssh://chevron@vs-ssh.visualstudio.com:22/AnsibleRoles/_git/ansible-role-get-manifest
+    version: master
+    scm: git

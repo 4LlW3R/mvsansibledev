@@ -1,0 +1,9 @@
+- hosts: localhost
+  connection: local
+
+  roles:
+    - role: ansible-role-azure-redis  # Creation of Cache for Redis 
+      azure_redis_name: "{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-tco"
+      azure_redis_sku_family: "C"
+      azure_redis_sku_name: "Standard"
+      azure_redis_sku_capacity: "1"

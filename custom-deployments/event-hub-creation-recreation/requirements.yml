@@ -1,0 +1,2 @@
+- src: ssh://chevron@vs-ssh.visualstudio.com:22/AnsibleRoles/_ssh/ansible-role-azure-event-hub
+  scm: git

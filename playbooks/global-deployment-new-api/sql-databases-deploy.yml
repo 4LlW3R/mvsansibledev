@@ -1,0 +1,76 @@
+- hosts: localhost
+  connection: local
+
+  vars_files:
+    - vars.yml
+
+  roles:
+    - role: ansible-role-azure-azuresql-server  # Creation of SQL Server for hive metastore
+      azure_azuresql_server_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}hmtco"
+      azure_azuresql_server_admin_login: "sqladmin"
+      azure_azuresql_server_aad_name: "TCO MVS Support Group"
+      azure_azuresql_server_aad_sid: "{{ app_objectIDs.TCO_MVS_Support_Group }}"
+      azure_azuresql_server_firewallrules_allowazureservices: true
+      azure_firewallrules_additional: "{{ sql_firewall_rules }}"
+      azure_azuresql_server_enablenolock: false
+            
+    - role: ansible-role-azure-azuresql-database  # Creation of SQL Database (hive metastore for Databricks) on this server
+      azure_azuresql_server_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}hmtco"
+      azure_azuresql_database_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}hmtco"
+      azure_azuresql_database_admin_login: "sqladmin"
+      azure_azuresql_database_sqloffering: "S2"
+      azure_azuresql_database_sqledition: "Standard"
+      azure_azuresql_database_maxsizebytes: "268435456000"
+
+
+    - role: ansible-role-azure-azuresql-server  # Creation of SQL Server for PUMP and SPEEDLAYER configuration databases and data quality statistics database
+      azure_azuresql_server_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco"
+      azure_azuresql_server_admin_login: "sqladmin"
+      azure_azuresql_server_aad_name: "TCO MVS Support Group"
+      azure_azuresql_server_aad_sid: "{{ app_objectIDs.TCO_MVS_Support_Group }}"
+      azure_azuresql_server_firewallrules_allowazureservices: true
+      azure_firewallrules_additional: "{{ sql_firewall_rules }}"
+      azure_azuresql_server_enablenolock: false
+    
+    - role: ansible-role-azure-azuresql-database  # Creation of SQL Database (PUMP) on this server
+      azure_azuresql_server_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco"
+      azure_azuresql_database_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco"
+      azure_azuresql_database_admin_login: "sqladmin"
+      azure_azuresql_database_sqloffering: "S1"
+      azure_azuresql_database_sqledition: "Standard"
+      azure_azuresql_database_maxsizebytes: "268435456000"
+    
+    - role: ansible-role-azure-azuresql-database  # Creation of SQL Database (SPEEDLAYER) on this server
+      azure_azuresql_server_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco"
+      azure_azuresql_database_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco1"
+      azure_azuresql_database_admin_login: "sqladmin"
+      azure_azuresql_database_sqloffering: "{{ 'S4' if subscription=='p332' or cvx_environment_name=='dev' else 'S1' }}"
+      azure_azuresql_database_sqledition: "Standard"
+      azure_azuresql_database_maxsizebytes: "268435456000"
+
+    - role: ansible-role-azure-azuresql-database  # Creation of SQL Database (data quality statistics) on this server
+      azure_azuresql_server_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco"
+      azure_azuresql_database_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco4"
+      azure_azuresql_database_admin_login: "sqladmin"
+      azure_azuresql_database_sqloffering: "S1"
+      azure_azuresql_database_sqledition: "Standard"
+      azure_azuresql_database_maxsizebytes: "268435456000"
+      when: subscription=='p332' or cvx_environment_name=='test'
+
+
+    - role: ansible-role-azure-azuresql-server  # Creation of SQL Server for MDM configuration database
+      azure_azuresql_server_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco1"
+      azure_azuresql_server_admin_login: "sqladmin"
+      azure_azuresql_server_aad_name: "TCO MVS Support Group"
+      azure_azuresql_server_aad_sid: "{{ app_objectIDs.TCO_MVS_Support_Group }}"
+      azure_azuresql_server_firewallrules_allowazureservices: true
+      azure_firewallrules_additional: "{{ sql_firewall_rules }}"
+      azure_azuresql_server_enablenolock: false
+
+    - role: ansible-role-azure-azuresql-database  # Creation of SQL Database (MDM) on this server
+      azure_azuresql_server_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco1"
+      azure_azuresql_database_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco2"
+      azure_azuresql_database_admin_login: "sqladmin"
+      azure_azuresql_database_sqloffering: "{{ 'S3' if subscription=='p332' or cvx_environment_name=='dev' else 'S1' }}"
+      azure_azuresql_database_sqledition: "Standard"
+      azure_azuresql_database_maxsizebytes: "268435456000"

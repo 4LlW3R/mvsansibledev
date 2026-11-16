@@ -1,0 +1,16 @@
+parameters:
+  subscription: ''
+
+steps:
+- bash: |
+    pip install wheel
+    pip install --user databricks-cli
+    echo "##vso[task.setvariable variable=PATH]$HOME/.local/bin:$PATH"
+  displayName: 'Install Databricks CLI on an agent'
+- task: AzureCLI@1
+  displayName: 'Install databricks config on an agent'
+  inputs:
+    azureSubscription: cvx-pipeline-mvsdatalake-${{ parameters.subscription }}-20190722
+    scriptLocation: inlineScript
+    inlineScript: |
+      az keyvault secret download --file $HOME/.databrickscfg --encoding base64 --name databrickscfg --vault-name mvsdatalake-${{ parameters.subscription }}-cvx

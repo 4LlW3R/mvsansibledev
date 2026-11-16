@@ -1,0 +1,25 @@
+- hosts: localhost
+  connection: local
+
+  roles:
+    - role: ansible-role-azure-databricks  # Creation of Databricks
+      azure_databricks_baseservicename: "{{ cvx_mnemonic | lower }}-{{ cvx_az_regions_rev[azure_databricks_location] }}"
+      azure_databricks_service_name: "{{ azure_databricks_baseservicename }}-{{ subscription }}{{ cvx_environment_name }}"
+      azure_databricks_tier: Premium
+      azure_databricks_managed_rg: "{{ cvx_az.resourceGroup }}-databricks-{{ cvx_environment_name }}"
+      azure_databricks_managedworkspace_authorizations:
+      - principalId: "{{ cvx_az_client_id }}"
+        roleDefinitionId: "Contributor"       
+      azure_databricks_vnet_name: ""
+
+
+    - role: ansible-role-azure-storage-account  # Creation of Storage Account for Databricks files storing
+      azure_storage_account_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco3"
+      azure_storage_account_max_name_length: 25
+      azure_storage_account_kind: "StorageV2"
+      azure_storage_account_soft_delete: true
+      azure_storage_account_soft_delete_retention_days: "60"
+
+    - name: ansible-role-azure-storage-blob  # Creation of blob container into this Storage Account
+      azure_storage_blob_account: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco3"
+      azure_storage_blob_container: "development"

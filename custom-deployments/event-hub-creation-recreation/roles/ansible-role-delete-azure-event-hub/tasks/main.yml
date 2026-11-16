@@ -1,0 +1,17 @@
+---
+# tasks file for ansible-role-delete-azure-event-hub
+
+- name: Delete group of resources
+  azure_rm_resource:
+    state: "absent"
+    client_id: "{{ cvx_az_client_id }}"
+    subscription_id: "{{ cvx_az.subscription }}"
+    tenant: "{{ cvx_az_tenant }}"
+    secret: "{{ cvx_az_client_secret }}"
+    api_version: "{{ del_resource_api_version }}"
+    resource_group: "{{ del_resource_group }}"
+    provider: "{{ del_resource_provider }}"
+    resource_type: "{{ del_resource_type }}"
+    resource_name: "{{ item[del_resource_name_key] }}"
+  with_items:
+    - "{{ del_resource_list }}"

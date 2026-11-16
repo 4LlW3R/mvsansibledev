@@ -1,0 +1,62 @@
+- hosts: localhost
+  connection: local
+
+  vars:
+    ping_test_emails:
+    - konstantin_farvazov@epam.com
+    - kseniia_iashina@epam.com
+    - andrei_bespalov@epam.com
+    - nikita_poberezkin@epam.com
+    - dmitriy_kozhin@epam.com
+    - valerii_florov@epam.com
+    - v.pozhidayev@tengizchevroil.com
+    - tcomvssupport@chevron.com
+
+  roles:
+    - role: ansible-role-get-manifest               # workaround for environments which are not included to cvx global manifest
+      cvx_orion_manifest_service_id: 0000004321     # actually not existing id
+      when: cvx_environment_name=='mqa' or cvx_environment_name=='integ' 
+
+    - role: ansible-role-azure-storage-account  # Creation of Storage Account for Azure Function
+      azure_storage_account_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco2"
+      azure_storage_account_max_name_length: 25
+      azure_storage_account_kind: "StorageV2" 
+      azure_storage_account_soft_delete: true 
+      azure_storage_account_soft_delete_retention_days: 60
+
+    - role: ansible-role-azure-asp  # Creation of Azure Service Plan for Azure Function
+      azure_asp_name: "{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-tco"
+
+    - role: ansible-role-azure-function  # Creation of Azure Function with Application Insights and Availability Test
+      azure_function_name: "{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-tco"
+      azure_function_client_id: "{{ cvx_az_client_id }}"
+      azure_hosting_plan_name: "{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-tco"
+      azure_storage_account_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco2"
+
+      azure_appinsights_name: "{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-tco"  
+      azure_app_service_asp_name: "{{ azure_hosting_plan_name }}"
+      azure_app_service_name: "{{ azure_function_name }}" 
+      azure_app_service_uri: "https://{{ azure_function_name }}.azurewebsites.net"
+      azure_appinsights_pingtest_deploy: true
+      azure_appinsights_pingtest_name: "{{ azure_appinsights_name }}-PingTest"
+      azure_appinsights_pingtest_alert_email_recipients: "{{ ping_test_emails }}"
+      azure_appinsights_webavailability_name: "{{ azure_appinsights_name }}-WebsiteAvailabilityAlertRule"
+      azure_action_group_name: "{{ azure_appinsights_name }}-AG"
+
+      azure_function_dnsregsiter_fqdn: false
+      azure_function_auth_enabled: false    
+
+      azure_event_hub_default_sas_keyname: "RootManageSharedAccessKey"
+      azure_event_hub_namespace_name: "event-hub-{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-namespace2"
+
+      azure_function_extension_version: ~1
+      azure_function_customappsettings:
+        - name: FUNCTIONS_WORKER_RUNTIME
+          value: "dotnet"
+        - name: "{{ azure_event_hub_namespace_name }}_{{ azure_event_hub_default_sas_keyname }}_EVENTHUB"
+          value: "[listKeys(resourceId('Microsoft.Eventhub/namespaces/authorizationRules', '{{ azure_event_hub_namespace_name }}', '{{ azure_event_hub_default_sas_keyname }}'), providers('Microsoft.Eventhub', 'namespaces/authorizationRules').apiVersions[0]).primaryConnectionString]"
+
+      azure_function_zipdeploy_enabled: true
+      azure_zipdeploy_artifactUrl: "https://artifactory.chevron.com/generic-local-tco/TCO-MVS-DATALAKE/{{ cvx_environment_name }}/rcdb-ingestion-csharp-{{ version }}.zip"
+      azure_zipdeploy_artifactory_user: "{{ artifactory_user }}"
+      azure_zipdeploy_artifactory_token: "{{ artifactory_pass }}"

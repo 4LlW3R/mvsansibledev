@@ -1,0 +1,47 @@
+resources:
+  repositories:
+  - repository: pf
+    type: git
+    name: CVX-DevOps/PipelineFramework
+    ref: refs/tags/3.3.0
+    
+trigger: none
+
+# VARIABLES FROM LINKED KEY VAULT:
+# 'app-secret'
+
+stages:
+- template: pipeline.yml@pf
+  parameters:
+    project:
+    - name: Global_Deployment
+      type: ansible 
+      playbook: $(Build.SourcesDirectory)/playbooks/global-deployment-new-api/main-newapi.yml
+      deploy_active: true
+      cleanup_active: false
+      test_active: false
+      pipeline_pool:
+        name: 'Default'
+        demands:
+        - agent.os -equals Linux
+      deploy_pool:
+        name: 'Default'
+        demands:
+        - agent.os -equals Linux
+      bundleVersion: 'latest'
+      extra_ansible_vars: |
+        cvx_environment_name: $(cvx_environment_name)
+        subscription: $(subscription)
+        ansible_python_interpreter: "/home/cvx_admin_user/.ansible-virtualenv/bin/python"
+        cvx_manifest_file_name: "$(Build.SourcesDirectory)/cvxmanifest.json"
+        cvx_az_client_secret: $(app-secret)
+        keyvaults_enable: $(keyvaults_enable)
+        event_hubs_enable: $(event_hubs_enable)
+        sql_databases_enable: $(sql_databases_enable)
+        adls_gen2_enable: $(adls_gen2_enable)
+        databricks_enable: $(databricks_enable)
+        redis_enable: $(redis_enable)
+      force_install_roles: "$(Build.SourcesDirectory)/requirements.yml"
+      enable_local_roles: false
+      timeoutInMinutes: 180
+      verbosity: -vv

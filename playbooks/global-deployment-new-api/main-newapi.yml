@@ -1,0 +1,21 @@
+- import_playbook: manifest-workaround.yml          # workaround for environments which are not included to cvx global manifest
+  when: cvx_environment_name=='mqa' or cvx_environment_name=='integ' 
+
+
+- import_playbook: keyvaults-deploy.yml
+  when: keyvaults_enable | default(True) | bool
+
+- import_playbook: event-hubs-deploy.yml
+  when: event_hubs_enable | default(True) | bool
+
+- import_playbook: sql-databases-deploy.yml
+  when: sql_databases_enable | default(True) | bool
+
+- import_playbook: adls-gen2-deploy.yml
+  when: adls_gen2_enable | default(True) | bool
+
+- import_playbook: databricks-deploy.yml
+  when: databricks_enable | default(True) | bool
+
+- import_playbook: redis-deploy.yml
+  when: redis_enable | default(True) | bool

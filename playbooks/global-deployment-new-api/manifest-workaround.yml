@@ -1,0 +1,6 @@
+- hosts: localhost
+  connection: local
+   
+  roles:
+    - role: ansible-role-get-manifest
+      cvx_orion_manifest_service_id: 0000004321     # actually not existing id

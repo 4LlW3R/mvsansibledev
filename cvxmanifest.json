@@ -1,0 +1,100 @@
+{
+    "costElement": "9417113826",
+    "companyCode": "0444",
+    "ownerEmail": ["v.pozhidayev@tengizchevroil.com"],
+    "application": {
+        "name": "TCO MVS DataLake",
+        "shortName": "mvsdatalake",
+        "serviceId": 1500000789,
+        "artifactPath": "Jenkins-TCO/MVS-DATALAKE",
+        "securityRating": "Tier 3"
+	},
+	"SQLConnectionName": "dbconn",
+	"baseUrl": "mvsdatalake",
+	"environments": {
+        "test": {
+            "dnsDomain": "chevron.onmicrosoft.com",
+            "azure": {
+                "subscription": "baa67dbf-45d0-4d84-b662-527186361068",
+                "subscriptionsShortName": "t332",
+                "defaultRegion": "westeurope",
+                "resourcesRegion": "westeurope",
+                "resourceGroup": "mvsdatalake-t332-20190722",
+                "appId": "003b32ac-3a0a-4ae2-91c1-acf37cc78b52",
+                "clientSecretName": "kvenc:app-secret",
+                "vaultName": "mvsdatalake-t332-cvx",
+                "provisioningGroup": "cloud-provisioning-azure"
+            }
+        },
+        "integ": {
+            "dnsDomain": "chevron.onmicrosoft.com",
+            "azure": {
+                "subscription": "baa67dbf-45d0-4d84-b662-527186361068",
+                "subscriptionsShortName": "t332",
+                "defaultRegion": "westeurope",
+                "resourcesRegion": "westeurope",
+                "resourceGroup": "mvsdatalake-t332-20190722",
+                "appId": "003b32ac-3a0a-4ae2-91c1-acf37cc78b52",
+                "clientSecretName": "kvenc:app-secret",
+                "vaultName": "mvsdatalake-t332-cvx",
+                "provisioningGroup": "cloud-provisioning-azure"
+            }
+        },
+        "mqa": {
+            "dnsDomain": "chevron.onmicrosoft.com",
+            "azure": {
+                "subscription": "baa67dbf-45d0-4d84-b662-527186361068",
+                "subscriptionsShortName": "t332",
+                "defaultRegion": "westeurope",
+                "resourcesRegion": "westeurope",
+                "resourceGroup": "mvsdatalake-t332-20190722",
+                "appId": "003b32ac-3a0a-4ae2-91c1-acf37cc78b52",
+                "clientSecretName": "kvenc:app-secret",
+                "vaultName": "mvsdatalake-t332-cvx",
+                "provisioningGroup": "cloud-provisioning-azure"
+            }
+        },
+        "dev": {
+            "dnsDomain": "chevron.onmicrosoft.com",
+            "azure": {
+                "subscription": "baa67dbf-45d0-4d84-b662-527186361068",
+                "subscriptionsShortName": "t332",
+                "defaultRegion": "westeurope",
+                "resourcesRegion": "westeurope",
+                "resourceGroup": "mvsdatalake-t332-20190722",
+                "appId": "003b32ac-3a0a-4ae2-91c1-acf37cc78b52",
+                "clientSecretName": "kvenc:app-secret",
+                "vaultName": "mvsdatalake-t332-cvx",
+                "provisioningGroup": "cloud-provisioning-azure"
+            }
+        },
+        "stage": {
+            "dnsDomain": "chevron.onmicrosoft.com",
+            "azure": {
+                "subscription": "5be498b4-aa62-4501-9c88-0a6406a43b15",
+                "subscriptionsShortName": "p332",
+                "defaultRegion": "westeurope",
+                "resourcesRegion": "westeurope",
+                "resourceGroup": "mvsdatalake-p332-20190722",
+                "appId": "78aa95f3-b2ff-4432-a46f-cd4de6b31e90",
+                "clientSecretName": "kvenc:app-secret",
+                "vaultName": "mvsdatalake-p332-cvx",
+                "provisioningGroup": "cloud-provisioning-azure"
+            }
+        },
+        "prod": {
+            "dnsDomain": "chevron.onmicrosoft.com",
+            "azure": {
+                "subscription": "5be498b4-aa62-4501-9c88-0a6406a43b15",
+                "subscriptionsShortName": "p332",
+                "defaultRegion": "westeurope",
+                "resourcesRegion": "westeurope",
+                "resourceGroup": "mvsdatalake-p332-20190722",
+                "appId": "78aa95f3-b2ff-4432-a46f-cd4de6b31e90",
+                "clientSecretName": "kvenc:app-secret",
+                "vaultName": "mvsdatalake-p332-cvx",
+                "provisioningGroup": "cloud-provisioning-azure"
+            }
+        }
+	}
+}

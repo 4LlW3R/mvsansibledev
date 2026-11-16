@@ -1,0 +1,28 @@
+jobs:
+- job: Clean_PUMPS_database
+  pool:
+    vmImage: windows-2019
+  steps:
+    - task: AzureKeyVault@1
+      displayName: 'Get secret variables'
+      inputs:
+        azureSubscription: cvx-pipeline-mvsdatalake-$(subscription)-20190722
+        keyVaultName: tco-mvs-$(subscription)$(env)-kv
+        secretsFilter: '*'
+
+    - task: SqlAzureDacpacDeployment@1
+      inputs:
+        azureSubscription: cvx-pipeline-mvsdatalake-$(subscription)-20190722
+        AuthenticationType: 'server'
+        ServerName: mvsdatalake$(subscription)$(env)tco.database.windows.net
+        DatabaseName: mvsdatalake$(subscription)$(env)tco
+        SqlUsername: 'sqladmin'
+        SqlPassword: $(sqladmin)
+        deployType: 'InlineSqlTask'
+        SqlInline: |
+          TRUNCATE TABLE [cfg].[Signal]
+          TRUNCATE TABLE [cfg].[EventHubOffset]
+          TRUNCATE TABLE [cfg].[MixOffset]
+          GO
+        IpDetectionMethod: 'AutoDetect'
+

@@ -1,0 +1,137 @@
+# MUTABLE VARIABLES DESCRIPTION:
+# 'cvx_environment_name' - environment name specified in cvxmanifest.json
+# 'namespace_name' - the EH namespace name
+# 'eventhubs' - JSON formatted description of event hubs which need to create or change in the namespace
+# 'mode' - if mode=create new namespace will be created, otherwise namespace will be recreated
+# 'sku_name' - the name and tier of the event hub SKU ("Basic" tier doesn't allow to create consumer groups)
+
+parameters:
+  namespace_name: event-hub-mvsdatalake-$(subscription)$(env)-namespace
+  eventhubs: '[
+                  { "event_hub_name": "dim-asset",
+                    "message_retention_days": 7,
+                    "partition_count": 32,
+                    "consumer_groups": [ "internal_pump_cg", "redis_manager_cg" ],
+                    "authorization_rules": []
+                  },
+                  { "event_hub_name": "dim-driver",
+                    "message_retention_days": 7,
+                    "partition_count": 32,
+                    "consumer_groups": [ "internal_pump_cg", "redis_manager_cg" ],
+                    "authorization_rules": []
+                  },
+                  {
+                    "event_hub_name": "dim-library-event",
+                    "message_retention_days": 7,
+                    "partition_count": 32,
+                    "consumer_groups": [ "internal_pump_cg" ],
+                    "authorization_rules": []
+                  },
+                  {
+                    "event_hub_name": "dim-location",
+                    "message_retention_days": 7,
+                    "partition_count": 32,
+                    "consumer_groups": [ "internal_pump_cg" ],
+                    "authorization_rules": []
+                  },
+                  {
+                    "event_hub_name": "dim-organization-group",
+                    "message_retention_days": 7,
+                    "partition_count": 32,
+                    "consumer_groups": [ "internal_pump_cg" ],
+                    "authorization_rules": []
+                  },
+                  {
+                    "event_hub_name": "fact-event",
+                    "message_retention_days": 7,
+                    "partition_count": 32,
+                    "consumer_groups": [ "internal_pump_cg" ],
+                    "authorization_rules": []
+                  },
+                  {
+                    "event_hub_name": "fact-position",
+                    "message_retention_days": 7,
+                    "partition_count": 32,
+                    "consumer_groups": [ "internal_pump_cg", "overtaking_detection_cg", "road_condition_violation_detection_cg"],
+                    "authorization_rules": []
+                  },
+                  {
+                    "event_hub_name": "fact-trip",
+                    "message_retention_days": 7,
+                    "partition_count": 32,
+                    "consumer_groups": [ "internal_pump_cg" ],
+                    "authorization_rules": []
+                  },
+                  {
+                    "event_hub_name": "dim-organization-subgroup",
+                    "message_retention_days": 7,
+                    "partition_count": 32,
+                    "consumer_groups": [ "internal_pump_cg" ],
+                    "authorization_rules": []
+                  },
+                  {
+                    "event_hub_name": "fact-tacho",
+                    "message_retention_days": 7,
+                    "partition_count": 32,
+                    "consumer_groups": [ "internal_pump_cg" ],
+                    "authorization_rules": []
+                  }
+                ]'
+  sku_name: 'Standard'
+  mode: ''
+
+steps:
+  - task: AzureKeyVault@1
+    displayName: 'Get secret variables'
+    inputs:
+      azureSubscription: cvx-pipeline-mvsdatalake-$(subscription)-20190722
+      keyVaultName: tco-mvs-$(subscription)$(env)-kv
+      secretsFilter: '*'
+
+  - task: ArtifactoryGenericDownload@2
+    inputs:
+      connection: 'Chevron-Artifactory'
+      specSource: 'taskConfiguration'
+      fileSpec: |
+        {
+          "files": [
+            {
+              "pattern": "generic-local-tco/TCO-MVS/jq/jq-linux64",
+              "target": "$(Build.BinariesDirectory)/jq/jq",
+              "flat": "true"
+            }
+          ]
+        }
+      failNoOp: true
+    displayName: 'Download jq binary file'
+
+  - script: | 
+      chmod +x $(Build.BinariesDirectory)/jq/jq
+      echo "##vso[task.setvariable variable=PATH]$(Build.BinariesDirectory)/jq:$PATH"
+    displayName: 'Add jq to the PATH'
+
+  - task: Bash@3
+    displayName: 'Generate playbook'
+    inputs:
+      targetType: 'filePath'
+      filePath: $(Build.SourcesDirectory)/custom-deployments/event-hub-creation-recreation/playbook-generation-script.sh
+    env:
+      EVENTHUBS: ${{ parameters.eventhubs }}
+      NAMESPACE_NAME: ${{ parameters.namespace_name }}
+      SKU_NAME: ${{ parameters.sku_name }}
+      MODE: ${{ parameters.mode }}
+
+  - task: Bash@3
+    displayName: 'Install additional roles'
+    inputs:
+      targetType: 'inline'
+      script: ansible-galaxy --force install -r $BUILD_SOURCESDIRECTORY/custom-deployments/event-hub-creation-recreation/requirements.yml -p $BUILD_SOURCESDIRECTORY/custom-deployments/event-hub-creation-recreation/roles
+
+  - task: Ansible@0
+    inputs:
+      ansibleInterface: 'agentMachine'
+      playbookPathOnAgentMachine: '$(Build.SourcesDirectory)/custom-deployments/event-hub-creation-recreation/event-hub-creation-recreation.yml'
+      inventoriesAgentMachine: 'noInventory'
+      args: '-e "cvx_environment_name=$(env) cvx_az_client_id=$(app-id) cvx_az_client_secret=$(app-secret) cvx_manifest_file_name=$BUILD_SOURCESDIRECTORY/cvxmanifest.json"'
+      failOnStdErr: false
+

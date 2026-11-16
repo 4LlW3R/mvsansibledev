@@ -1,0 +1,81 @@
+trigger: none
+
+# VARIABLES FROM LINKED KEY VAULT:
+# 'app-id'
+# 'app-secret'
+# 'sqladmin'
+
+# MUTABLE VARIABLES DESCRIPTION:
+# 'cvx_environment_name' - environment name specified in cvxmanifest.json
+# 'namespace_name' - the EH namespace name
+# 'eventhubs' - JSON formatted description of event hubs which need to create or change in the namespace
+# 'mode' - if mode=create new namespace will be created, otherwise namespace will be recreated
+# 'sku_name' - the name and tier of the event hub SKU ("Basic" tier doesn't allow to create consumer groups)
+# 'sp_name' - Service Connection name
+# 'server' - SQL server of PUMP database
+# 'database' - the PUMP database name
+
+jobs:
+- job: EH_recreation_via_Ansible
+  pool:
+    name: default
+    demands: agent.os -equals Linux
+  steps:
+    - task: ArtifactoryGenericDownload@2
+      inputs:
+        connection: 'Chevron-Artifactory'
+        specSource: 'taskConfiguration'
+        fileSpec: |
+          {
+            "files": [
+              {
+                "pattern": "generic-local-tco/TCO-MVS/jq/jq-linux64",
+                "target": "$(Build.BinariesDirectory)/jq/jq",
+                "flat": "true"
+              }
+            ]
+          }
+        failNoOp: true
+      displayName: 'Download jq binary file'
+
+    - script: | 
+        chmod +x $(Build.BinariesDirectory)/jq/jq
+        echo "##vso[task.setvariable variable=PATH]$(Build.BinariesDirectory)/jq:$PATH"
+
+    - task: Bash@3
+      inputs:
+        targetType: 'filePath'
+        filePath: $(Build.SourcesDirectory)/custom-deployments/event-hub-creation-recreation/playbook-generation-script.sh
+        
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: ansible-galaxy --force install -r $BUILD_SOURCESDIRECTORY/custom-deployments/event-hub-creation-recreation/requirements.yml -p $BUILD_SOURCESDIRECTORY/custom-deployments/event-hub-creation-recreation/roles
+
+    - task: Ansible@0
+      inputs:
+        ansibleInterface: 'agentMachine'
+        playbookPathOnAgentMachine: '$(Build.SourcesDirectory)/custom-deployments/event-hub-creation-recreation/event-hub-creation-recreation.yml'
+        inventoriesAgentMachine: 'noInventory'
+        args: '-e "cvx_environment_name=$(cvx_environment_name) cvx_az_client_id=$(app-id) cvx_az_client_secret=$(app-secret) cvx_manifest_file_name=$BUILD_SOURCESDIRECTORY/cvxmanifest.json"'
+        failOnStdErr: false
+
+- job: Clean_PUMPS_database
+  pool:
+    vmImage: windows-2019
+  steps:
+    - task: SqlAzureDacpacDeployment@1
+      inputs:
+        azureSubscription: $(sp_name)
+        AuthenticationType: 'server'
+        ServerName: $(server)
+        DatabaseName: $(database)
+        SqlUsername: 'sqladmin'
+        SqlPassword: $(sqladmin)
+        deployType: 'InlineSqlTask'
+        SqlInline: |
+          TRUNCATE TABLE [cfg].[Signal]
+          TRUNCATE TABLE [cfg].[EventHubOffset]
+          TRUNCATE TABLE [cfg].[MixOffset]
+          GO
+        IpDetectionMethod: 'AutoDetect'

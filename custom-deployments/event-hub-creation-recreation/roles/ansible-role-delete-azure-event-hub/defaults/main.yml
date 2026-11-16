@@ -1,0 +1,5 @@
+---
+# defaults file for ansible-role-delete-azure-event-hub
+
+azure_event_hub_resourcegroup: "{{ cvx_az.resourceGroup }}"
+azure_event_hub_namespace_name: "event-hub-{{ cvx_mnemonic | lower }}-{{ cvx_environment_name }}-namespace"

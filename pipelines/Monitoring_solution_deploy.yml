@@ -1,0 +1,88 @@
+trigger: none
+
+resources:
+  repositories:
+  - repository: pf
+    type: git
+    name: CVX-DevOps/PipelineFramework
+    ref: refs/tags/3.3.0
+
+variables:
+  storage_account_name: mvsdatalake$(subscription)$(env)tco3
+  service_connection_name: "cvx-pipeline-mvsdatalake-$(subscription)-20190722"
+  cvx_environment_name: "$(env)"
+
+# VARIABLES FROM LINKED KEY VAULT:
+# 'app-secret'
+# 'MvsDatalakeProd-sp-id'
+# 'MvsDatalakeProd-sp-pass'
+# 'MvsDatalakeTest-sp-id'
+# 'MvsDatalakeTest-sp-pass'
+# 'MvsProdTco-sp-id'
+# 'MvsProdTco-sp-pass'
+
+# MUTABLE VARIABLES DESCRIPTION:
+# 'env' - environment name
+# 'subscription' - subscription name
+
+stages:
+- stage: Run_Databricks_Monitoring_Job
+  jobs:
+  - job: Run_Databricks_Monitoring_Job
+    pool:
+      vmImage: ubuntu-18.04
+    steps:
+    - template: templates/install_databricks_cli.yml
+      parameters:
+        subscription: $(subscription)
+    - task: AzureKeyVault@1
+      displayName: 'Get SQL password'
+      inputs:
+        azureSubscription: cvx-pipeline-mvsdatalake-$(subscription)-20190722
+        keyVaultName: mvsdatalake-$(subscription)-cvx
+        secretsFilter: 'sqladmin'
+    - task: Bash@3
+      inputs:
+        targetType: 'filePath'
+        filePath: $(Build.SourcesDirectory)/monitoring/run_databricks_monitoring_job.sh
+      env:
+        SQL_PASS: $(sqladmin)
+        DBSPROFILE: $(subscription)$(env)
+
+- template: pipeline.yml@pf
+  parameters:
+    project:
+    - name: Deploy_monitoring_solution
+      type: ansible 
+      playbook: $(Build.SourcesDirectory)/playbooks/monitoring-solution-deploy.yml
+      deploy_active: true
+      cleanup_active: false
+      test_active: false
+      pipeline_pool:
+        name: 'Default'
+        demands:
+        - agent.os -equals Linux
+      deploy_pool:
+        name: 'Default'
+        demands:
+        - agent.os -equals Linux
+      bundleVersion: 'latest'
+      extra_ansible_vars: |
+        env: $(env)
+        subscription: $(subscription)
+        client_id: $(app-id)
+        MvsDatalakeProd_username: $(MvsDatalakeProd-sp-id)
+        MvsDatalakeProd_password: $(MvsDatalakeProd-sp-pass)
+        MvsDatalakeTest_username: $(MvsDatalakeTest-sp-id)
+        MvsDatalakeTest_password: $(MvsDatalakeTest-sp-pass)
+        MvsProdTco_username: $(MvsProdTco-sp-id)
+        MvsProdTco_password: $(MvsProdTco-sp-pass)
+        ansible_python_interpreter: "/home/cvx_admin_user/.ansible-virtualenv/bin/python"
+        cvx_manifest_file_name: "$(Build.SourcesDirectory)/cvxmanifest.json"
+        cvx_environment_name: $(cvx_environment_name)
+        cvx_az_client_secret: $(app-secret)
+        cvx_secure_logging: false
+      force_install_roles: "$(Build.SourcesDirectory)/requirements.yml"
+      enable_local_roles: false
+      timeoutInMinutes: 180
+      verbosity: -vv

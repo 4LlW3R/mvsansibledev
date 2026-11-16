@@ -1,0 +1,90 @@
+- hosts: localhost
+  connection: local
+
+  roles:
+    - role: ansible-role-azure-event-hub  # Creation of Namespace and Event Hubs
+      azure_event_hub_namespace_name: "event-hub-{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-namespace"
+      azure_event_hub_sku_name: "Standard"
+      azure_event_hub_message_retention_days: 7
+      azure_event_hub_partition_count: 32
+      azure_event_hub_sku_capacity: 1
+      azure_event_hub_autoinflate_enabled: True
+      azure_event_hub_autoinflate_max: "{{ '10' if subscription=='p332' or cvx_environment_name=='dev' else '5' }}"
+      azure_event_hubs:
+      - event_hub_name: "dim-asset"
+        consumer_groups:
+        - name: "internal_pump_cg"
+        - name: "redis_manager_cg"
+      - event_hub_name: "dim-driver"
+        consumer_groups:
+        - name: "internal_pump_cg"
+        - name: "redis_manager_cg"
+      - event_hub_name: "dim-library-event"
+        consumer_groups:
+        - name: "internal_pump_cg"
+      - event_hub_name: "dim-location"
+        consumer_groups:
+        - name: "internal_pump_cg"
+      - event_hub_name: "dim-organization-group"
+        consumer_groups:
+        - name: "internal_pump_cg"
+      - event_hub_name: "fact-event"
+        consumer_groups:
+        - name: "internal_pump_cg"
+      - event_hub_name: "fact-position"
+        consumer_groups:
+        - name: "internal_pump_cg"
+        - name: "overtaking_detection_cg"
+        - name: "road_condition_violation_detection_cg"
+      - event_hub_name: "fact-trip"
+        consumer_groups:
+        - name: "internal_pump_cg"
+      - event_hub_name: "dim-organization-subgroup"
+        consumer_groups:
+        - name: "internal_pump_cg"
+      - event_hub_name: "fact-tacho"
+        consumer_groups:
+        - name: "internal_pump_cg"
+
+    - role: ansible-role-azure-event-hub  # Creation of Namespace and Event Hubs
+      azure_event_hub_namespace_name: "event-hub-{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-namespace1"
+      azure_event_hub_sku_name: "Standard"
+      azure_event_hub_message_retention_days: 7
+      azure_event_hub_partition_count: 32
+      azure_event_hub_sku_capacity: 1
+      azure_event_hub_autoinflate_enabled: True
+      azure_event_hub_autoinflate_max: 5
+      azure_event_hubs:
+      - event_hub_name: "overtaking"
+        consumer_groups:
+        - name: "overtaking_violation_detection_cg"
+      - event_hub_name: "overtaking-violation"
+
+    - role: ansible-role-azure-event-hub  # Creation of Namespace and Event Hubs
+      azure_event_hub_namespace_name: "event-hub-{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-namespace2"
+      azure_event_hub_sku_name: "Standard"
+      azure_event_hub_message_retention_days: 7
+      azure_event_hub_partition_count: 32
+      azure_event_hub_sku_capacity: 1
+      azure_event_hub_autoinflate_enabled: True
+      azure_event_hub_autoinflate_max: 5
+      azure_event_hubs:
+      - event_hub_name: "road-condition-violation"
+        consumer_groups:
+        - name: "road_condition_violation_stream_datalake_cg"
+      - event_hub_name: "road-condition"
+        consumer_groups:
+        - name: "road_condition_cg"
+    
+    - role: ansible-role-azure-event-hub  # Creation of Namespace and Event Hubs
+      azure_event_hub_namespace_name: "event-hub-{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-namespace3"
+      azure_event_hub_sku_name: "Standard"
+      azure_event_hub_message_retention_days: 7
+      azure_event_hub_partition_count: 32
+      azure_event_hub_sku_capacity: 1
+      azure_event_hub_autoinflate_enabled: True
+      azure_event_hub_autoinflate_max: 5
+      azure_event_hubs:
+      - event_hub_name: "confirmed-overtaking-violation"
+        consumer_groups:
+        - name: "overtaking_violation_stream_datalake_cg"

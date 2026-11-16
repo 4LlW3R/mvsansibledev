@@ -1,0 +1,9 @@
+---
+# vars file for ansible-role-delete-azure-event-hub
+
+del_resource_api_version: "2017-04-01"
+del_resource_group: "{{ azure_event_hub_resourcegroup }}"
+del_resource_provider: "EventHub"
+del_resource_type: "namespaces/{{ azure_event_hub_namespace_name }}/EventHubs"
+del_resource_list: "{{ azure_event_hubs }}"
+del_resource_name_key: event_hub_name

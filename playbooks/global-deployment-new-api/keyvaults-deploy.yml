@@ -1,0 +1,99 @@
+- hosts: localhost
+  connection: local
+
+  vars_files:
+    - vars.yml
+
+  vars:
+    keyvault_key_name: "devkey"
+
+  roles:
+    - role: ansible-role-azure-keyvault  # Creation of Key Vault for developers' access
+      azure_keyvault_name: "mvs-dl-{{ subscription }}{{ cvx_environment_name }}-tco"
+      azure_keyvault_vault_uri: "https://{{ azure_keyvault_name }}.vault.azure.net/"
+      azure_keyvault_sku_name: "Standard"
+      azure_keyvault_generate_keys:
+        - name: "{{ keyvault_key_name }}"
+      azure_keyvault_extra_access_policies:
+        - principal_id: "{{ app_objectIDs.tcomvswebserviceCarTelemetryImport }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.tcomvspumptest }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.tcomvsingestionpumpsvc }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.MvsMonitoringEventHubTelemetryFunc }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.EPAM_MVS_Developers }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.TCO_MVS_Support_Group }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.Deployment_principal }}"
+          key_permissions:
+            - Get
+            - List
+            - Update
+            - Create
+            - Import
+            - Delete
+            - Recover
+            - Backup
+            - Restore
+            - Encrypt
+            - Decrypt
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+
+
+    - role: ansible-role-azure-keyvault  # Creation of Key Vault for Azure DevOps build secret variables
+      azure_keyvault_name: "tco-mvs-{{ subscription }}{{ cvx_environment_name }}-kv"
+      azure_keyvault_vault_uri: "https://{{ azure_keyvault_name }}.vault.azure.net/"
+      azure_keyvault_sku_name: "Standard"
+      azure_keyvault_extra_access_policies:
+        - principal_id: "{{ app_objectIDs.tcomvswebserviceCarTelemetryImport }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.tcomvspumptest }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.tcomvsingestionpumpsvc }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.MvsMonitoringEventHubTelemetryFunc }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.EPAM_MVS_Developers }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.TCO_MVS_Support_Group }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"
+        - principal_id: "{{ app_objectIDs.Deployment_principal }}"
+          key_permissions: "{{ azure_keyvault_all_key_permissions }}"
+          secret_permissions: "{{ azure_keyvault_all_secret_permissions }}"
+          certificate_permissions: "{{ azure_keyvault_all_certificate_permissions }}"

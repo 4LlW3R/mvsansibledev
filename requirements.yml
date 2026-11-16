@@ -1,0 +1,3 @@
+- src: chevron@vs-ssh.visualstudio.com:v3/chevron/AnsibleRoles/ansible-role-azure-automation-account
+  version: epam_dev
+  scm: git

@@ -1,0 +1,95 @@
+- hosts: localhost
+  connection: local
+
+  vars_files:
+    - vars.yml
+
+  vars:
+    azure_databricks_location: "{{ cvx_az.defaultRegion }}"
+    azure_databricks_baseservicename: "{{ cvx_mnemonic | lower }}-{{ cvx_az_regions_rev[azure_databricks_location] }}"
+    azure_databricks_service_name: "{{ azure_databricks_baseservicename }}-{{ subscription }}{{ cvx_environment_name }}"
+    adls_folders:
+      p332:
+        - path: "/{{ azure_databricks_service_name }}"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.prod.parent_directories if cvx_environment_name=='prod' else acldefaults.stage.parent_directories }}"
+        - path: "/{{ azure_databricks_service_name }}/hive"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.prod.parent_directories if cvx_environment_name=='prod' else acldefaults.stage.parent_directories }}"
+        - path: "/{{ azure_databricks_service_name }}/hive/warehouse"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.prod.parent_directories if cvx_environment_name=='prod' else acldefaults.stage.parent_directories }}"
+        - path: "/{{ azure_databricks_service_name }}/hive/warehouse/raw.db"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.prod.raw_directory if cvx_environment_name=='prod' else acldefaults.stage.raw_directory }}"
+        - path: "/{{ azure_databricks_service_name }}/hive/warehouse/prepared.db"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.prod.prepared_directory if cvx_environment_name=='prod' else acldefaults.stage.prepared_directory }}"
+        - path: "/{{ azure_databricks_service_name }}1"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.basic }}"
+      t332:
+        - path: "/{{ azure_databricks_service_name }}"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.basic }}"
+        - path: "/{{ azure_databricks_service_name }}/hive"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.basic }}"
+        - path: "/{{ azure_databricks_service_name }}/hive/warehouse"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.basic }}"
+        - path: "/{{ azure_databricks_service_name }}/hive/warehouse/raw.db"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.basic }}"
+        - path: "/{{ azure_databricks_service_name }}/hive/warehouse/prepared.db"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.basic }}"
+        - path: "/{{ azure_databricks_service_name }}1"
+          owner: "{{ app_objectIDs.Deployment_principal }}"
+          group: "{{ app_objectIDs.TCO_MVS_DevOps }}"
+          aclentries: "{{ acldefaults.basic }}"
+  
+  roles:
+    - role: ansible-role-azure-adls-v2  # Creation of ADLS Gen2
+      azure_adls_v2_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco"
+      azure_adls_v2_location: "{{ cvx_az.defaultRegion }}"
+      azure_adls_v2_encryption_config: 'ServiceManaged'
+      azure_adls_v2_firewall_enabled: false
+      azure_adls_v2_enablenolock: false
+ 
+    - role: ansible-role-azure-adls-folders  # Creation of filesystems
+      azure_adls_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}tco"
+      azure_adls_isv2: true
+      azure_adls_root_filesystems:
+      - "{{ azure_databricks_service_name }}"              # filesystem for data in ADLS Gen2
+      - "{{ azure_databricks_service_name }}1"             # filesystem for Databricks logs in ADLS Gen2     
+      azure_adls_folders: "{{ adls_folders.p332 if subscription=='p332' else adls_folders.t332 }}"
+
+
+    - role: ansible-role-azure-adls-v2  # Creation of ADLS Gen2 for backups
+      azure_adls_v2_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}bac"
+      azure_adls_v2_location: northeurope
+      azure_adls_v2_encryption_config: 'ServiceManaged'
+      azure_adls_v2_firewall_enabled: false
+      azure_adls_v2_enablenolock: false
+      when: subscription=='p332'
+
+    - role: ansible-role-azure-adls-folders  # Creation of filesystems
+      azure_adls_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{ cvx_environment_name }}bac"
+      azure_adls_isv2: true
+      azure_adls_root_filesystems:
+      - "{{ azure_databricks_service_name }}"
+      - "{{ azure_databricks_service_name }}1" 
+      azure_adls_folders: "{{ adls_folders.p332 }}"
+      when: subscription=='p332'

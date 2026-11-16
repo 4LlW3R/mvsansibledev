@@ -1,0 +1,285 @@
+- hosts: localhost
+  connection: local
+
+  vars:
+    tenant: 'fd799da1-bfc1-4234-a91c-72b3a1cb9e26'
+    subscription_id: "{{ '5be498b4-aa62-4501-9c88-0a6406a43b15' if subscription == 'p332' else 'baa67dbf-45d0-4d84-b662-527186361068' }}"
+    ping_test_emails:
+    - konstantin_farvazov@epam.com
+    - kseniia_iashina@epam.com
+    - andrei_bespalov@epam.com
+    - nikita_poberezkin@epam.com
+    - dmitriy_kozhin@epam.com
+    - valerii_florov@epam.com
+    - v.pozhidayev@tengizchevroil.com
+    - tcomvssupport@chevron.com
+
+    azure_automation_powershell_modules:
+      - name: 'Az.Accounts'
+        version: '1.7.1'
+      - name: 'Az.Resources'
+        version: '1.10.0'
+        dependensies:
+         - 'Az.Accounts'
+      - name: 'Az.Storage'
+        version: '1.12.0'
+        dependensies:
+         - 'Az.Accounts'
+      - name: 'Az.KeyVault'
+        version: '1.5.0'
+        dependensies:
+         - 'Az.Accounts'
+      - name: SqlServer 
+        version: '21.1.18218'
+      - name: 'PSFTP'
+        version: '1.7.0.4'
+      - name: 'azure.databricks.cicd.tools'
+        version: '2.0.55'
+
+    azure_automation_schedules:
+      - name: 'daily_common_expiration_monitoring_schedule'
+        frequency: 'Day'
+        start_time: "{{ lookup('pipe', 'date --utc -d \"+1 days\" +%Y-%m-%dT04:00:00+00:00') }}"
+        interval: 1
+      - name: 'daily_html_generator_schedule'
+        frequency: 'Day'
+        start_time: "{{ lookup('pipe', 'date --utc -d \"+1 days\" +%Y-%m-%dT04:10:00+00:00') }}"
+        interval: 1
+      - name: 'daily_notification_system_schedule'
+        frequency: 'Day'
+        start_time: "{{ lookup('pipe', 'date --utc -d \"+1 days\" +%Y-%m-%dT04:10:00+00:00') }}"
+        interval: 1
+      - name: 'hourly_db_jobs_statuses_monitoring_schedule_1'
+        frequency: 'Hour'
+        start_time: "{{ lookup('pipe', 'date --utc -d \"+75 minutes\" +%Y-%m-%dT%H:00:00+00:00') }}"
+        interval: 1
+      - name: 'hourly_db_jobs_statuses_monitoring_schedule_2'
+        frequency: 'Hour'
+        start_time: "{{ lookup('pipe', 'date --utc -d \"+1 hours\" +%Y-%m-%dT%H:30:00+00:00') }}"
+        interval: 1
+      - name: 'hourly_html_generator_schedule_1'
+        frequency: 'Hour'
+        start_time: "{{ lookup('pipe', 'date --utc -d \"+75 minutes\" +%Y-%m-%dT%H:10:00+00:00') }}"
+        interval: 1
+      - name: 'hourly_html_generator_schedule_2'
+        frequency: 'Hour'
+        start_time: "{{ lookup('pipe', 'date --utc -d \"+1 hour\" +%Y-%m-%dT%H:40:00+00:00') }}"
+        interval: 1
+      - name: 'hourly_notification_system_schedule'
+        frequency: 'Hour'
+        start_time: "{{ lookup('pipe', 'date --utc -d \"+75 minutes\" +%Y-%m-%dT%H:10:00+00:00') }}"
+        interval: 1
+      - name: 'initial_schedule_1'
+        frequency: 'OneTime'
+        start_time: "{{ lookup('pipe', 'date --utc -d \"+15 minutes\" +%Y-%m-%dT%H:%M:%S+00:00') }}"
+      - name: 'initial_schedule_2'
+        frequency: 'OneTime'
+        start_time: "{{ lookup('pipe', 'date --utc -d \"+20 minutes\" +%Y-%m-%dT%H:%M:%S+00:00') }}"
+
+    azure_automation_account_runbooks_source: 'azure_blob_storage'
+    azure_automation_account_runbooks_source_storage_account_name: "mvsdatalake{{ subscription }}{{ env }}tco3"
+    azure_automation_account_runbooks_source_container_name: 'monitoring-runbooks'
+    azure_automation_runbooks:
+      - name: '{{ subscription }}{{ env }}_apps_certificates_expiration_monitoring'
+        type: 'PowerShell'
+        source_blob_name: 'apps_certificates_expiration_monitoring.ps1'
+        schedules:
+          - 'daily_common_expiration_monitoring_schedule'
+          - 'initial_schedule_1'
+      - name: '{{ subscription }}{{ env }}_db_tokens_expiration_monitoring'
+        type: 'PowerShell'
+        source_blob_name: 'db_tokens_expiration_monitoring.ps1'
+        schedules:
+          - 'daily_common_expiration_monitoring_schedule'
+          - 'initial_schedule_1'
+      - name: '{{ subscription }}{{ env }}_sql_credentials_expiration_monitoring'
+        type: 'PowerShell'
+        source_blob_name: 'sql_credentials_expiration_monitoring.ps1'
+        schedules:
+          - 'daily_common_expiration_monitoring_schedule'
+          - 'initial_schedule_1'
+      - name: '{{ subscription }}{{ env }}_daily_html_generator'
+        type: 'PowerShell'
+        source_blob_name: 'daily_html_generator.ps1'
+        schedules:
+          - 'daily_html_generator_schedule'
+          - 'initial_schedule_2'
+      - name: '{{ subscription }}{{ env }}_daily_notification_system'
+        type: 'PowerShell'
+        source_blob_name: 'daily_notification_system.ps1'
+        schedules:
+          - 'daily_notification_system_schedule'
+      - name: '{{ subscription }}{{ env }}_db_jobs_statuses_monitoring'
+        type: 'PowerShell'
+        source_blob_name: 'db_jobs_statuses_monitoring.ps1'
+        schedules:
+          - 'hourly_db_jobs_statuses_monitoring_schedule_1'
+          - 'hourly_db_jobs_statuses_monitoring_schedule_2'
+          - 'initial_schedule_1'
+      - name: '{{ subscription }}{{ env }}_hourly_html_generator'
+        type: 'PowerShell'
+        source_blob_name: 'hourly_html_generator.ps1'
+        schedules:
+          - 'hourly_html_generator_schedule_1'
+          - 'hourly_html_generator_schedule_2'
+          - 'initial_schedule_2'
+      - name: '{{ subscription }}{{ env }}_hourly_notification_system'
+        type: 'PowerShell'
+        source_blob_name: 'hourly_notification_system.ps1'
+        schedules:
+          - 'hourly_notification_system_schedule'
+
+    azure_automation_credentials:
+      - credential_name: 'SP-MvsDatalakeProd-credential'
+        username: "{{ MvsDatalakeProd_username }}"
+        password: "{{ MvsDatalakeProd_password }}"
+      - credential_name: 'SP-MvsDatalakeTest-credential'
+        username: "{{ MvsDatalakeTest_username }}"
+        password: "{{ MvsDatalakeTest_password }}"
+      - credential_name: 'SP-MvsProdTco-credential'
+        username: "{{ MvsProdTco_username }}"
+        password: "{{ MvsProdTco_password }}"
+
+    azure_automation_variables:
+      - name: 'env'
+        value: "{{ env }}"
+      - name: 'subscription'
+        value: "{{ subscription }}"
+      - name: 'tenant'
+        value: "{{ tenant }}"
+      - name: 'sql_user'
+        value: 'sqladmin'
+      - name: 'smtp_server'
+        value: 'cloudsmtp.chevron.com'
+      - name: 'smtp_port'
+        value: '587'
+      - name: 'smtp_login'
+        value: 'svc-tco-mvs-dl-smtp'
+
+
+  roles:
+    - role: ansible-role-get-manifest               # workaround for environments which are not included to cvx global manifest
+      cvx_orion_manifest_service_id: 0000004321     # actually not existing id
+      when: cvx_environment_name=='mqa' or cvx_environment_name=='integ'
+
+    - role: ansible-role-azure-azuresql-database  # Create SQL Database
+      azure_azuresql_server_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{env}}tco1"
+      azure_azuresql_database_name: "{{ cvx_mnemonic | lower }}-{{subscription}}{{env}}-monitoring-tco"
+      azure_azuresql_database_admin_login: "sqladmin"
+      azure_azuresql_database_sqloffering: "S1"
+      azure_azuresql_database_sqledition: "Standard"
+      azure_azuresql_database_maxsizebytes: "268435456000"
+
+#    - role: ansible-role-sql-sqlscripts
+#      azure_azuresql_server_name: "{{ cvx_mnemonic | lower }}{{ subscription }}{{env}}tco1"
+#      azure_azuresql_database_name: "{{ cvx_mnemonic | lower }}-{{subscription}}{{env}}-monitoring-tco"
+#      azure_azuresql_database_admin_login: "sqladmin"
+#      sql_sqlscripts_sql_file_list:
+#        - "../monitoring/tables_creation.sql"
+
+    - role: ansible-role-azure-asp  # Create App Service Plan
+      azure_asp_name: "{{ cvx_mnemonic | lower }}-{{subscription}}{{env}}-monitoring-tco"
+
+    - role: ansible-role-azure-app-service  # Create App Service (web app)
+      azure_app_service_app_kind: "app"
+      azure_app_service_name: "{{ cvx_mnemonic | lower }}-{{subscription}}{{env}}-monitoring-tco"
+      azure_app_service_asp_name: "{{ cvx_mnemonic | lower }}-{{subscription}}{{env}}-monitoring-tco"
+      azure_app_service_uri: "https://{{ azure_app_service_name }}.azurewebsites.net"
+
+      azure_appinsights_name: "{{ cvx_mnemonic | lower }}-{{ subscription }}{{ cvx_environment_name }}-monitoring-tco"
+      azure_appinsights_pingtest_deploy: true
+      azure_appinsights_pingtest_name: "{{ azure_appinsights_name }}-PingTest"
+      azure_appinsights_pingtest_alert_email_recipients: "{{ ping_test_emails }}"
+      azure_appinsights_webavailability_name: "{{ azure_appinsights_name }}-WebsiteAvailabilityAlertRule"
+      azure_action_group_name: "{{ azure_appinsights_name }}-AG"
+
+      azure_app_service_domain_hint_enabled: false
+      azure_app_service_zip_deploy_enabled: false
+      azure_app_service_register_dns: false
+
+
+  tasks:
+    - name: Put automation runbooks into blob storage
+      azure_rm_storageblob:
+        subscription_id: "{{ subscription_id }}"
+        tenant: "{{ tenant }}"
+        client_id: "{{ client_id }}"
+        secret: "{{ cvx_az_client_secret }}"
+        resource_group: "mvsdatalake-{{subscription}}-20190722"
+        storage_account_name: "mvsdatalake{{subscription}}{{env}}tco3"
+        container: 'monitoring-runbooks'
+        public_access: container
+        blob: "{{ item['source_blob_name'] }}"
+        src: "../monitoring/automation_runbooks/{{ item['source_blob_name'] }}"
+        force: yes
+      loop: "{{ azure_automation_runbooks }}"
+
+    - name: Get access token for azure api
+      uri:
+        url: "https://login.microsoftonline.com/{{ tenant }}/oauth2/v2.0/token"
+        method: "POST"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+        body: "grant_type=client_credentials&client_id={{ client_id }}&client_secret={{ cvx_az_client_secret | urlencode() | regex_replace('/', '%2F') }}&scope={{ 'https://management.azure.com/.default' | urlencode() }}"
+      register: "access_token"
+      no_log: "false"
+
+    - name: Remove Microsoft_ApplicationInsights_AzureWebSites extention for web app
+      uri:
+        url: "https://management.azure.com/subscriptions/{{ subscription_id }}/resourceGroups/mvsdatalake-{{ subscription }}-20190722/providers/Microsoft.Web/sites/mvsdatalake-{{subscription}}{{env}}-monitoring-tco/siteextensions/Microsoft.ApplicationInsights.AzureWebSites?api-version=2019-08-01"
+        method: "DELETE"
+        headers:
+          Authorization: "Bearer {{ access_token.json.access_token }}"
+        timeout: 90
+      no_log: "false"
+
+    - name: Restart web app
+      uri:
+        url: "https://management.azure.com/subscriptions/{{ subscription_id }}/resourceGroups/mvsdatalake-{{ subscription }}-20190722/providers/Microsoft.Web/sites/mvsdatalake-{{subscription}}{{env}}-monitoring-tco/restart?api-version=2019-08-01"
+        method: "POST"
+        headers:
+          Authorization: "Bearer {{ access_token.json.access_token }}"
+          Content-Length: 0
+      no_log: "false"
+
+    - name: Get ftp hostname
+      uri:
+        url: "https://management.azure.com/subscriptions/{{ subscription_id }}/resourceGroups/mvsdatalake-{{ subscription }}-20190722/providers/Microsoft.Web/sites/mvsdatalake-{{subscription}}{{env}}-monitoring-tco/publishxml?api-version=2019-08-01"
+        method: "POST"
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ access_token.json.access_token }}"
+          Content-Length: 0
+      register: "publishing_hostname"
+      no_log: "false"
+
+    - name: Get ftp credentials
+      uri:
+        url: "https://management.azure.com/subscriptions/{{ subscription_id }}/resourceGroups/mvsdatalake-{{ subscription }}-20190722/providers/Microsoft.Web/sites/mvsdatalake-{{subscription}}{{env}}-monitoring-tco/config/publishingcredentials/list?api-version=2019-08-01"
+        method: "POST"
+        headers:
+          Authorization: "Bearer {{ access_token.json.access_token }}"
+          Content-Length: 0
+      register: "publishing_credentials"
+      no_log: "false"
+
+    - set_fact:
+        ftp_azure_automation_variables:
+          - name: 'ftp_server'
+            value: "{{ publishing_hostname.content | regex_search('- FTP.*- ReadOnly - FTP') | regex_search('publishUrl=.*/site/wwwroot') | replace('publishUrl=\"', '') | replace('/site/wwwroot', '') }}"
+          - name: 'ftp_user'
+            value: "{{ publishing_credentials.json.properties.publishingUserName }}"
+          - name: 'ftp_pass'
+            value: "{{ publishing_credentials.json.properties.publishingPassword }}"
+            encrypted: true
+
+    - name: include role
+      include_role: 
+        name: ansible-role-azure-automation-account
+      vars:
+        azure_automation_account_name: "{{ cvx_mnemonic | lower }}-{{subscription}}{{env}}-monitoring-tco"
+        azure_automation_account_extra_modules: "{{ azure_automation_powershell_modules }}"
+        azure_automation_account_schedules: "{{ azure_automation_schedules }}"
+        azure_automation_account_runbooks: "{{ azure_automation_runbooks }}"
+        azure_automation_account_credentials: "{{ azure_automation_credentials }}"
+        azure_automation_account_variables: "{{ azure_automation_variables + ftp_azure_automation_variables }}"

@@ -1,0 +1,126 @@
+app_objectIDs:
+  tcomvswebserviceCarTelemetryImport: "a1b08bd3-16c9-4205-b1f4-73f623411253"
+  tcomvspumptest: "9dd669ca-dca6-4fd8-9537-305c1b1d764a"
+  tcomvsingestionpumpsvc: "aa8aff7a-4718-4938-be11-b743d76b8336"
+  MvsMonitoringEventHubTelemetryFunc: "ae258e3c-f7c9-420e-8446-05889d2ffca0"
+  EPAM_MVS_Developers: "430db941-2152-4245-82d5-7c76ad37704b"
+  TCO_MVS_DevOps: "919de894-43d2-4bdb-ab98-e8f9b9cbba8a"
+  TCO_MVS_Support_Group: "c04a61e2-3141-4a70-846c-29175a66c8ab"
+  Deployment_principal: "{{ 'ff390162-3847-4e3e-ad37-f75a39590197' if subscription=='p332' else '50854c59-8003-43ae-9c82-c051329baa69' }}"  # Mvsdatalake - Prod | Test SP Object ID
+  ADLS_PROD_raw_read_group: "29c2447a-1263-48b1-8044-6964bcbe2400"
+  ADLS_PROD_raw_readwrite_group: "2a528c31-98ae-46bc-a801-1fe824ebdb85"
+  ADLS_PROD_prepared_read_group: "e5e0ce4a-d296-46f5-8917-ed28d466c47a"
+  ADLS_PROD_prepared_readwrite_group: "eacb10ab-6204-4b6f-b0bd-13f65b23c171"
+  ADLS_STAGE_raw_read_group: "1ddcb3d8-2b81-48f1-86a0-556ed89e7636"
+  ADLS_STAGE_raw_readwrite_group: "854c2297-2e99-4b2c-9405-ada20c4a4375"
+  ADLS_STAGE_prepared_read_group: "98eaed67-00c8-49e2-9987-348d8da10a8e"
+  ADLS_STAGE_prepared_readwrite_group: "a3af57f6-7564-4a28-87aa-de2eb1424476"
+
+acldefaults:
+  prod:
+    raw_directory:
+    - user::rwx
+    - default:user::rwx
+    - group::rwx
+    - default:group::rwx
+    - other::---
+    - default:other::---
+    - mask::rwx
+    - default:mask::rwx
+    - "group:{{ app_objectIDs.ADLS_PROD_raw_read_group }}:r-x"
+    - "default:group:{{ app_objectIDs.ADLS_PROD_raw_read_group }}:r-x"
+    - "group:{{ app_objectIDs.ADLS_PROD_raw_readwrite_group }}:rwx"
+    - "default:group:{{ app_objectIDs.ADLS_PROD_raw_readwrite_group }}:rwx"
+    prepared_directory:
+    - user::rwx
+    - default:user::rwx
+    - group::rwx
+    - default:group::rwx
+    - other::---
+    - default:other::---
+    - mask::rwx
+    - default:mask::rwx
+    - "group:{{ app_objectIDs.ADLS_PROD_prepared_read_group }}:r-x"
+    - "default:group:{{ app_objectIDs.ADLS_PROD_prepared_read_group }}:r-x"
+    - "group:{{ app_objectIDs.ADLS_PROD_prepared_readwrite_group }}:rwx"
+    - "default:group:{{ app_objectIDs.ADLS_PROD_prepared_readwrite_group }}:rwx"
+    parent_directories:
+    - user::rwx
+    - default:user::rwx
+    - group::rwx
+    - default:group::rwx
+    - other::---
+    - default:other::---
+    - mask::rwx
+    - default:mask::rwx
+    - "group:{{ app_objectIDs.ADLS_PROD_raw_read_group }}:r-x"
+    - "default:group:{{ app_objectIDs.ADLS_PROD_raw_read_group }}:r-x"
+    - "group:{{ app_objectIDs.ADLS_PROD_raw_readwrite_group }}:rwx"
+    - "default:group:{{ app_objectIDs.ADLS_PROD_raw_readwrite_group }}:rwx"
+    - "group:{{ app_objectIDs.ADLS_PROD_prepared_read_group }}:r-x"
+    - "default:group:{{ app_objectIDs.ADLS_PROD_prepared_read_group }}:r-x"
+    - "group:{{ app_objectIDs.ADLS_PROD_prepared_readwrite_group }}:rwx"
+    - "default:group:{{ app_objectIDs.ADLS_PROD_prepared_readwrite_group }}:rwx"
+  stage:
+    raw_directory:
+    - user::rwx
+    - default:user::rwx
+    - group::rwx
+    - default:group::rwx
+    - other::---
+    - default:other::---
+    - mask::rwx
+    - default:mask::rwx
+    - "group:{{ app_objectIDs.ADLS_STAGE_raw_read_group }}:r-x"
+    - "default:group:{{ app_objectIDs.ADLS_STAGE_raw_read_group }}:r-x"
+    - "group:{{ app_objectIDs.ADLS_STAGE_raw_readwrite_group }}:rwx"
+    - "default:group:{{ app_objectIDs.ADLS_STAGE_raw_readwrite_group }}:rwx"
+    prepared_directory:
+    - user::rwx
+    - default:user::rwx
+    - group::rwx
+    - default:group::rwx
+    - other::---
+    - default:other::---
+    - mask::rwx
+    - default:mask::rwx
+    - "group:{{ app_objectIDs.ADLS_STAGE_prepared_read_group }}:r-x"
+    - "default:group:{{ app_objectIDs.ADLS_STAGE_prepared_read_group }}:r-x"
+    - "group:{{ app_objectIDs.ADLS_STAGE_prepared_readwrite_group }}:rwx"
+    - "default:group:{{ app_objectIDs.ADLS_STAGE_prepared_readwrite_group }}:rwx"
+    parent_directories:
+    - user::rwx
+    - default:user::rwx
+    - group::rwx
+    - default:group::rwx
+    - other::---
+    - default:other::---
+    - mask::rwx
+    - default:mask::rwx
+    - "group:{{ app_objectIDs.ADLS_STAGE_raw_read_group }}:r-x"
+    - "default:group:{{ app_objectIDs.ADLS_STAGE_raw_read_group }}:r-x"
+    - "group:{{ app_objectIDs.ADLS_STAGE_raw_readwrite_group }}:r-x"
+    - "default:group:{{ app_objectIDs.ADLS_STAGE_raw_readwrite_group }}:r-x"
+    - "group:{{ app_objectIDs.ADLS_STAGE_prepared_read_group }}:r-x"
+    - "default:group:{{ app_objectIDs.ADLS_STAGE_prepared_read_group }}:r-x"
+    - "group:{{ app_objectIDs.ADLS_STAGE_prepared_readwrite_group }}:r-x"
+    - "default:group:{{ app_objectIDs.ADLS_STAGE_prepared_readwrite_group }}:r-x"
+  basic:
+  - user::rwx
+  - default:user::rwx
+  - group::rwx
+  - default:group::rwx
+  - other::r-x
+  - default:other::r-x
+  - mask::rwx
+  - default:mask::rwx
+
+sql_firewall_rules:
+  - start_ip:  "46.229.218.0"  # EPAM spb1
+    end_ip:  "46.229.218.255"
+  - start_ip:  "94.19.198.0"   # EPAM spb2
+    end_ip:  "94.19.198.255"
+  - start_ip:  "87.245.199.0"  # EPAM smr
+    end_ip:  "87.245.199.255"
+  - start_ip:  "185.44.13.36"  # EPAM ru vpn
+    end_ip:  "185.44.13.36"
